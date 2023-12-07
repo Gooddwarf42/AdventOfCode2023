@@ -20,26 +20,19 @@ internal class Program
     {
         const string inputPath = "/home/marco/share/AdventOfCode2023/01/input";
 
-        var inputLines = new List<string>();
-
         var validDigitPatterns = DigitMapping.Keys.ToList();
         validDigitPatterns.Add(@"\d");
         var digitRegex = new Regex(string.Join("|", validDigitPatterns));
 
         System.Console.WriteLine(digitRegex.ToString());
 
+        var total = 0;
+
         using var streamReader = new StreamReader(inputPath);
         while (!streamReader.EndOfStream)
         {
             var line = streamReader.ReadLine()!;
-            // System.Console.WriteLine(line);
-            inputLines.Add(line);
-        }
 
-        var total = 0;
-
-        foreach (var line in inputLines)
-        {
             var matches = Regex.Matches(line, digitRegex.ToString());
             var matchesRightToLeft = Regex.Matches(line, digitRegex.ToString(), RegexOptions.RightToLeft);
             if (matches.Count == 0 || matchesRightToLeft.Count == 0)
