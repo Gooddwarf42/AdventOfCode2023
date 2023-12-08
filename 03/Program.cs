@@ -37,7 +37,7 @@ internal class Program
 
                     // finished parsing a good number, add it to the good list of numbers
 
-                    
+
                     parsingNumState = false;
                     isGoodNumber = false;
                 }
@@ -57,7 +57,8 @@ internal class Program
                 }
 
                 // Check if current digit is good and act accordingly
-                if (IsDigitGood(i,j, inputPadded)){
+                if (IsDigitGood(i, j, inputPadded))
+                {
                     // Handle here keeping track of good digits
                     isGoodNumber = true;
                 }
@@ -68,7 +69,36 @@ internal class Program
 
     private static bool IsDigitGood(int i, int j, char[][] inputPadded)
     {
+        var neighbours = GetNeighbours(i, j, inputPadded);
+
+        System.Console.WriteLine($"printing neighbourrs of {i}, {j}");
+        foreach (var mimmo in neighbours){
+            System.Console.WriteLine(mimmo);
+        }
+
+
         throw new NotImplementedException();
+    }
+
+    private static IEnumerable<T> GetNeighbours<T>(int i, int j, T[][] matrix)
+    {
+        // Assume i and j are not on the edges of the matrix because I am lazy
+        var upper = matrix[i - 1][(j - 1)..(j + 2)];
+        var lower = matrix[i + 1][(j - 1)..(j + 2)];
+        var left = matrix[i][j - 1];
+        var right = matrix[i][j + 1];
+
+        // return upper.Concat(lower).Append(left).Append(right);
+        foreach (var item in upper)
+        {
+            yield return item;
+        }
+        yield return left;
+        yield return right;
+        foreach (var item in lower)
+        {
+            yield return item;
+        }
     }
 
     private static char[][] GetPaddedInput(StreamReader streamReader)
