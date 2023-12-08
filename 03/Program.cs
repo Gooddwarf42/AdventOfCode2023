@@ -5,6 +5,7 @@ internal class Program
 {
     private static readonly Regex _notDigitRegex = new Regex(@"\D");
     private static readonly Regex _digitOrDotRegex = new Regex(@"\d|\.");
+    private static readonly Regex _numberRegex = new Regex(@"\d+");
     private static void Main(string[] args)
     {
         const int day = 3;
@@ -18,8 +19,16 @@ internal class Program
         //     Console.WriteLine(string.Join(null, line));
         // }
 
-        var total = 0;
+        
+        var total = SolvePart1(inputPadded);
 
+        System.Console.WriteLine(total);
+    }
+
+    private static int SolvePart1(char[][] inputPadded)
+    {
+        var total = 0;
+        
         var listOfGoodNumbers = new List<int>();
         var currentNumberStringBuilder = new StringBuilder();
 
@@ -41,7 +50,7 @@ internal class Program
                     }
 
                     // finished parsing a good number, add it to the good list of numbers
-                    var toAdd = int.Parse(currentNumberStringBuilder.ToString()); 
+                    var toAdd = int.Parse(currentNumberStringBuilder.ToString());
                     total += int.Parse(currentNumberStringBuilder.ToString());
 
                     parsingNumState = false;
@@ -76,7 +85,7 @@ internal class Program
             }
         }
 
-        System.Console.WriteLine(total);
+        return total;
     }
 
     private static bool IsDigitGood(int i, int j, char[][] inputPadded)
@@ -92,10 +101,10 @@ internal class Program
     private static IEnumerable<T> GetNeighbours<T>(int i, int j, T[][] matrix)
     {
         // Assume i and j are not on the edges of the matrix because I am lazy
-        var upper = matrix[i - 1][(j - 1)..(j + 2)];
-        var lower = matrix[i + 1][(j - 1)..(j + 2)];
-        var left = matrix[i][j - 1];
-        var right = matrix[i][j + 1];
+        var upper = GetUpperNeighbours(i, j, matrix);
+        var lower = GetLowerNeighbours(i, j, matrix);
+        var left = GetLeftNeighbours(i, j, matrix);
+        var right = GetRightNeighbours(i, j, matrix);
 
         // return upper.Concat(lower).Append(left).Append(right);
         foreach (var item in upper)
@@ -109,6 +118,14 @@ internal class Program
             yield return item;
         }
     }
+
+    private static T GetRightNeighbours<T>(int i, int j, T[][] matrix) => matrix[i][j + 1];
+
+    private static T GetLeftNeighbours<T>(int i, int j, T[][] matrix) => matrix[i][j - 1];
+
+    private static T[] GetLowerNeighbours<T>(int i, int j, T[][] matrix) => matrix[i + 1][(j - 1)..(j + 2)];
+
+    private static T[] GetUpperNeighbours<T>(int i, int j, T[][] matrix) => matrix[i - 1][(j - 1)..(j + 2)];
 
     private static char[][] GetPaddedInput(StreamReader streamReader)
     {
