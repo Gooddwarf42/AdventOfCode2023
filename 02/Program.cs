@@ -8,18 +8,16 @@ internal class Program
         using var streamReader = new StreamReader(inputPath);
 
         var total = 0;
-        const int maxRed = 12;
-        const int maxGreen = 13;
-        const int maxBlue = 14;
+        // const int maxRed = 12;
+        // const int maxGreen = 13;
+        // const int maxBlue = 14;
 
         while (!streamReader.EndOfStream)
         {
             var line = streamReader.ReadLine()!;
             var game = ParseGame(line);
-            if (game.IsPossible((maxRed, maxGreen, maxBlue)))
-            {
-                total += game.Id;
-            }
+            var (red, green, blue) = game.MinimumCubesNeeded();
+            total += red * green * blue;
         }
 
         System.Console.WriteLine(total);
@@ -97,4 +95,13 @@ internal static class GameExtensions
 {
     public static bool IsPossible(this Game game, (int maxRed, int maxGreen, int maxBlue) constraints)
         => game.Reveals.All(t => t.Red <= constraints.maxRed && t.Green <= constraints.maxGreen && t.Blue <= constraints.maxBlue);
+
+    public static (int Red, int Green, int Blue) MinimumCubesNeeded(this Game game)
+    {
+        var minRed = game.Reveals.Select(r => r.Red).Max();
+        var minGreen = game.Reveals.Select(r => r.Green).Max();
+        var minBlue = game.Reveals.Select(r => r.Blue).Max();
+
+        return (minRed, minGreen, minBlue);
+    }
 }
