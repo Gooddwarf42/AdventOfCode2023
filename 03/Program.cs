@@ -1,7 +1,10 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Text;
+using System.Text.RegularExpressions;
 
 internal class Program
 {
+    private static readonly Regex _notDigitRegex = new Regex(@"\D");
+    private static readonly Regex _digitOrDotRegex = new Regex(@"\d|\.");
     private static void Main(string[] args)
     {
         const int day = 3;
@@ -15,10 +18,11 @@ internal class Program
         //     Console.WriteLine(string.Join(null, line));
         // }
 
-        var notDigitRegex = new Regex(@"\D");
-        var digitOrDotRegex = new Regex(@"\d|.");
+        var total = 0;
 
         var listOfGoodNumbers = new List<int>();
+        var currentNumberStringBuilder = new StringBuilder();
+
         var parsingNumState = false;
         var isGoodNumber = false;
 
@@ -28,18 +32,22 @@ internal class Program
             for (int j = 1; j < row.Length - 1; j++)
             {
                 var currentChar = row[j];
-                if (notDigitRegex.Match(currentChar.ToString()).Success)
+                if (_notDigitRegex.Match(currentChar.ToString()).Success)
                 {
                     if (!parsingNumState || !isGoodNumber)
                     {
+                        parsingNumState = false;
                         continue;
                     }
 
                     // finished parsing a good number, add it to the good list of numbers
-
+                    var toAdd = int.Parse(currentNumberStringBuilder.ToString()); 
+                    total += int.Parse(currentNumberStringBuilder.ToString());
 
                     parsingNumState = false;
                     isGoodNumber = false;
+
+                    continue;
                 }
 
                 // current character is a digit. 
@@ -47,8 +55,11 @@ internal class Program
                 // Initialize parsing if needed
                 if (!parsingNumState)
                 {
+                    currentNumberStringBuilder = new();
                     parsingNumState = true;
                 }
+
+                currentNumberStringBuilder.Append(currentChar);
 
                 // Current parse already confirmed number to be a good boy
                 if (isGoodNumber)
@@ -59,25 +70,23 @@ internal class Program
                 // Check if current digit is good and act accordingly
                 if (IsDigitGood(i, j, inputPadded))
                 {
-                    // Handle here keeping track of good digits
                     isGoodNumber = true;
                 }
 
             }
         }
+
+        System.Console.WriteLine(total);
     }
 
     private static bool IsDigitGood(int i, int j, char[][] inputPadded)
     {
         var neighbours = GetNeighbours(i, j, inputPadded);
 
-        System.Console.WriteLine($"printing neighbourrs of {i}, {j}");
-        foreach (var mimmo in neighbours){
-            System.Console.WriteLine(mimmo);
-        }
+        // System.Console.WriteLine("Neighbours found:");
+        // System.Console.WriteLine(string.Join(null, neighbours));
 
-
-        throw new NotImplementedException();
+        return neighbours.Any(c => !_digitOrDotRegex.Match(c.ToString()).Success);
     }
 
     private static IEnumerable<T> GetNeighbours<T>(int i, int j, T[][] matrix)
