@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.RegularExpressions;
 
 internal class Program
@@ -164,10 +164,10 @@ internal class Program
     private static IEnumerable<T> GetNeighbours<T>(int i, int j, T[][] matrix)
     {
         // Assume i and j are not on the edges of the matrix because I am lazy
-        var upper = GetUpperNeighbours(i, j, matrix);
-        var lower = GetLowerNeighbours(i, j, matrix);
-        var left = GetLeftNeighbours(i, j, matrix);
-        var right = GetRightNeighbours(i, j, matrix);
+        var upper = matrix[i - 1][(j - 1)..(j + 2)];
+        var lower = matrix[i + 1][(j - 1)..(j + 2)];
+        var left = matrix[i][j - 1];
+        var right = matrix[i][j + 1];
 
         // return upper.Concat(lower).Append(left).Append(right);
         foreach (var item in upper)
@@ -181,14 +181,6 @@ internal class Program
             yield return item;
         }
     }
-
-    private static T GetRightNeighbours<T>(int i, int j, T[][] matrix) => matrix[i][j + 1];
-
-    private static T GetLeftNeighbours<T>(int i, int j, T[][] matrix) => matrix[i][j - 1];
-
-    private static T[] GetLowerNeighbours<T>(int i, int j, T[][] matrix) => matrix[i + 1][(j - 1)..(j + 2)];
-
-    private static T[] GetUpperNeighbours<T>(int i, int j, T[][] matrix) => matrix[i - 1][(j - 1)..(j + 2)];
 
     private static char[][] GetPaddedInput(StreamReader streamReader)
     {
