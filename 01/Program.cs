@@ -18,7 +18,8 @@ internal class Program
 
     private static void Main(string[] args)
     {
-        const string inputPath = "/home/marco/share/AdventOfCode2023/01/input";
+        const int day = 1;
+        var inputPath = $"/home/marco/share/AdventOfCode2023/{day:D2}/input";
 
         var validDigitPatterns = DigitMapping.Keys.ToList();
         validDigitPatterns.Add(@"\d");
