@@ -21,12 +21,14 @@ internal class Program
                 total += game.Id;
             }
         }
+
+        System.Console.WriteLine(total);
     }
 
 
     private static Game ParseGame(string line)
     {
-        var splitHeaderReveals = line.Split(':');
+        var splitHeaderReveals = line.Split(':', StringSplitOptions.TrimEntries);
         if (splitHeaderReveals.Length != 2)
         {
             throw new Exception("Occazzo");
@@ -40,16 +42,50 @@ internal class Program
 
     }
 
-    private static int ParseHeader(string v)
+    private static int ParseHeader(string header) =>
+        // Discard prefix "Game "
+        int.Parse(header[5..]);
+
+    private static IEnumerable<(int Red, int Green, int Blue)> ParseReveals(string reveals)
     {
-        throw new NotImplementedException();
-    }
-    
-    private static IEnumerable<(int Red, int Green, int Blue)> ParseReveals(string v)
-    {
-        throw new NotImplementedException();
+        var revealsArray = reveals.Split(';', StringSplitOptions.TrimEntries);
+        return revealsArray.Select(ParseReveal);
     }
 
+    private static (int Red, int Green, int Blue) ParseReveal(string revealString)
+    {
+        (int Red, int Green, int Blue) reveal = (0, 0, 0);
+
+        var singleColorReveals = revealString.Split(',', StringSplitOptions.TrimEntries);
+
+        foreach (var colorReveal in singleColorReveals)
+        {
+            var yetAnotherSplit = colorReveal.Split(' ', StringSplitOptions.TrimEntries);
+            if (yetAnotherSplit.Length != 2)
+            {
+                throw new Exception("Occazzo");
+            }
+            switch (yetAnotherSplit[1])
+            {
+                case "green":
+                    reveal.Green = int.Parse(yetAnotherSplit[0]);
+                    break;
+
+                case "red":
+                    reveal.Red = int.Parse(yetAnotherSplit[0]);
+                    break;
+
+                case "blue":
+                    reveal.Blue = int.Parse(yetAnotherSplit[0]);
+                    break;
+
+                default:
+                    throw new Exception("Le brutte cose!");
+            }
+        }
+
+        return reveal;
+    }
 }
 
 internal sealed class Game
