@@ -3,9 +3,9 @@ using System.Text.RegularExpressions;
 
 internal class Program
 {
-    private static readonly Regex _notDigitRegex = new Regex(@"\D");
-    private static readonly Regex _digitOrDotRegex = new Regex(@"\d|\.");
-    private static readonly Regex _numberRegex = new Regex(@"\d+");
+    private static readonly Regex NotDigitRegex = new Regex(@"\D");
+    private static readonly Regex DigitOrDotRegex = new Regex(@"\d|\.");
+    private static readonly Regex NumberRegex = new Regex(@"\d+");
     private static void Main(string[] args)
     {
         const int day = 3;
@@ -19,17 +19,80 @@ internal class Program
         //     Console.WriteLine(string.Join(null, line));
         // }
 
-        
         var total = SolvePart1(inputPadded);
+        System.Console.WriteLine($"Part 1: {total}");
 
-        System.Console.WriteLine(total);
+        var total2 = SolvePart2(inputPadded);
+        System.Console.WriteLine($"Part 2: {total2}");
+    }
+    private static int SolvePart2(char[][] inputPadded)
+    {
+        var total = 0;
+        for (int i = 1; i < inputPadded.Length - 1; i++)
+        {
+            var row = inputPadded[i];
+            for (int j = 1; j < row.Length - 1; j++)
+            {
+                var currentChar = row[j];
+
+                if (currentChar != '*')
+                {
+                    continue;
+                }
+
+                var surroundingNumbers = GetSurroundingNumbers(i, j, inputPadded);
+
+                if (surroundingNumbers.Count == 2)
+                {
+                    total += surroundingNumbers[0] * surroundingNumbers[1];
+                }
+            }
+        }
+
+        return total;
+    }
+
+    private static List<int> GetSurroundingNumbers(int i, int j, char[][] inputPadded)
+    {
+        var numbersList = new List<int>();
+        // Once again, we assume the padding on all sides.
+
+        string trimmedRowAbove = TrimRowToTheInterestingPart(i - 1);
+        string trimmedRowMiddle = TrimRowToTheInterestingPart(i);
+        string trimmedRowBelow = TrimRowToTheInterestingPart(i + 1);
+
+        numbersList.AddRange(GetNumbersInString(trimmedRowAbove));
+        numbersList.AddRange(GetNumbersInString(trimmedRowMiddle));
+        numbersList.AddRange(GetNumbersInString(trimmedRowBelow));
+
+        return numbersList;
+
+        string TrimRowToTheInterestingPart(int rowIndex)
+        {
+            var row = string.Join(null, inputPadded[rowIndex]);
+            var leftPart = row[..j];
+            var rightPart = row[(j + 1)..];
+            var leftTrimPoint = NotDigitRegex.Matches(leftPart).Last().Index;
+            var rightTrimPoint = j + 1 + NotDigitRegex.Matches(rightPart).First().Index;
+            var trimmedRow = row[leftTrimPoint..(rightTrimPoint + 1)];
+
+            if (trimmedRow.Length < 3)
+            {
+                throw new Exception("I am getting too sleepy for all these indices shenanigans");
+            }
+
+            return trimmedRow;
+        }
+
+        static IEnumerable<int> GetNumbersInString(string str)
+            => NumberRegex.Matches(str)
+                .Select(m => int.Parse(m.Value));
     }
 
     private static int SolvePart1(char[][] inputPadded)
     {
         var total = 0;
-        
-        var listOfGoodNumbers = new List<int>();
+
         var currentNumberStringBuilder = new StringBuilder();
 
         var parsingNumState = false;
@@ -41,7 +104,7 @@ internal class Program
             for (int j = 1; j < row.Length - 1; j++)
             {
                 var currentChar = row[j];
-                if (_notDigitRegex.Match(currentChar.ToString()).Success)
+                if (NotDigitRegex.Match(currentChar.ToString()).Success)
                 {
                     if (!parsingNumState || !isGoodNumber)
                     {
@@ -95,7 +158,7 @@ internal class Program
         // System.Console.WriteLine("Neighbours found:");
         // System.Console.WriteLine(string.Join(null, neighbours));
 
-        return neighbours.Any(c => !_digitOrDotRegex.Match(c.ToString()).Success);
+        return neighbours.Any(c => !DigitOrDotRegex.Match(c.ToString()).Success);
     }
 
     private static IEnumerable<T> GetNeighbours<T>(int i, int j, T[][] matrix)
