@@ -16,8 +16,8 @@ internal class Program
         {
             var line = streamReader.ReadLine()!;
             var game = ParseGame(line);
-            var (red, green, blue) = game.MinimumCubesNeeded();
-            total += red * green * blue;
+            var minimumCubeCount = game.MinimumCubesNeeded();
+            total += minimumCubeCount.Power();
         }
 
         System.Console.WriteLine(total);
@@ -44,15 +44,15 @@ internal class Program
         // Discard prefix "Game "
         int.Parse(header[5..]);
 
-    private static IEnumerable<(int Red, int Green, int Blue)> ParseReveals(string reveals)
+    private static IEnumerable<RGB> ParseReveals(string reveals)
     {
         var revealsArray = reveals.Split(';', StringSplitOptions.TrimEntries);
         return revealsArray.Select(ParseReveal);
     }
 
-    private static (int Red, int Green, int Blue) ParseReveal(string revealString)
+    private static RGB ParseReveal(string revealString)
     {
-        (int Red, int Green, int Blue) reveal = (0, 0, 0);
+        var reveal = new RGB();
 
         var singleColorReveals = revealString.Split(',', StringSplitOptions.TrimEntries);
 
@@ -89,19 +89,30 @@ internal class Program
 internal sealed class Game
 {
     public int Id { get; set; }
-    public (int Red, int Green, int Blue)[] Reveals { get; set; } = null!;
+    public RGB[] Reveals { get; set; } = null!;
 }
+
+internal sealed class RGB
+{
+    public int Red { get; set; }
+    public int Green { get; set; }
+    public int Blue { get; set; }
+
+    internal int Power() => Red * Green * Blue;
+}
+
 internal static class GameExtensions
 {
-    public static bool IsPossible(this Game game, (int maxRed, int maxGreen, int maxBlue) constraints)
-        => game.Reveals.All(t => t.Red <= constraints.maxRed && t.Green <= constraints.maxGreen && t.Blue <= constraints.maxBlue);
+    public static bool IsPossible(this Game game, RGB maxConstraints)
+        => game.Reveals.All(t => t.Red <= maxConstraints.Red 
+                                && t.Green <= maxConstraints.Green 
+                                && t.Blue <= maxConstraints.Blue);
 
-    public static (int Red, int Green, int Blue) MinimumCubesNeeded(this Game game)
-    {
-        var minRed = game.Reveals.Select(r => r.Red).Max();
-        var minGreen = game.Reveals.Select(r => r.Green).Max();
-        var minBlue = game.Reveals.Select(r => r.Blue).Max();
-
-        return (minRed, minGreen, minBlue);
-    }
+    public static RGB MinimumCubesNeeded(this Game game)
+        => new()
+        {
+            Red = game.Reveals.Select(r => r.Red).Max(),
+            Green = game.Reveals.Select(r => r.Green).Max(),
+            Blue = game.Reveals.Select(r => r.Blue).Max(),
+        };
 }
