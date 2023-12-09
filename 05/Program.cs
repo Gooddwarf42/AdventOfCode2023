@@ -13,7 +13,7 @@ internal class Program
 
         // TODO get seeds
         var firstLine = streamReader.ReadLine()!;
-        var seeds = NumberRegex.Matches(firstLine).Select(m => int.Parse(m.Value));
+        var seeds = NumberRegex.Matches(firstLine).Select(m => long.Parse(m.Value));
 
         var maps = ParseInput(streamReader);
 
@@ -21,7 +21,7 @@ internal class Program
 
         foreach(var map in maps)
         {
-            result = result.Select(input => map.Apply(input));
+            result = result.Select(map.Apply);
         }
 
         System.Console.WriteLine(result.Min());
@@ -60,7 +60,7 @@ internal class Program
 
     private static MapItem ParseMapItem(string line)
     {
-        var mapItemRaw = NumberRegex.Matches(line).Select(m => int.Parse(m.Value)).ToArray();
+        var mapItemRaw = NumberRegex.Matches(line).Select(m => long.Parse(m.Value)).ToArray();
 
         if (mapItemRaw.Length != 3)
         {
@@ -80,7 +80,7 @@ internal sealed class Map
 {
     public List<MapItem> MapItems { get; set; } = new();
 
-    public int Apply(int input) =>
+    public long Apply(long input) =>
         MapItems
             .SingleOrDefault(mi => mi.ShouldApply(input)) // I guess I could replace this with FirstOrDefault, but I am curious to see if I get exceptions this way
             ?.Apply(input)
@@ -89,14 +89,14 @@ internal sealed class Map
 
 internal sealed class MapItem
 {
-    public required int DestinationRangeStart { get; init; }
-    public required int SourceRangeStart { get; init; }
-    public required int RangeLength { get; init; }
+    public required long DestinationRangeStart { get; init; }
+    public required long SourceRangeStart { get; init; }
+    public required long RangeLength { get; init; }
 
-    public bool ShouldApply(int input) =>
+    public bool ShouldApply(long input) =>
         SourceRangeStart <= input && input < (SourceRangeStart + RangeLength);
 
-    public int Apply(int input)
+    public long Apply(long input)
     {
         if (!ShouldApply(input))
         {
