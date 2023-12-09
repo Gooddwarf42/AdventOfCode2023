@@ -21,6 +21,15 @@ internal class Program
 internal sealed class Map
 {
     public List<MapItem> mapItems { get; set; } = new();
+
+    public int Apply(int input)
+    {
+        return mapItems
+            .Where(mi => mi.ShouldApply(input))
+            .SingleOrDefault() // I guess I could replace these with FirstOrDefault, but I am curious to see if I get exceptions this way
+            ?.Apply(input)
+            ?? input;
+    }
 }
 
 internal sealed class MapItem
@@ -38,7 +47,7 @@ internal sealed class MapItem
         {
             throw new Exception("Ma es mona?");
         }
-        
+
         var offset = input - SourceRangeStart;
         return DestinationRangeStart + offset;
     }
