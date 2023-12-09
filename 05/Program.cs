@@ -17,7 +17,14 @@ internal class Program
 
         var maps = ParseInput(streamReader);
 
-        
+        var result = seeds;
+
+        foreach(var map in maps)
+        {
+            result = result.Select(input => map.Apply(input));
+        }
+
+        System.Console.WriteLine(result.Min());
     }
 
     private static IEnumerable<Map> ParseInput(StreamReader streamReader)
