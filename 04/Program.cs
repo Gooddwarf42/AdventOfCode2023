@@ -10,22 +10,32 @@ internal class Program
         var inputPath = $"/home/marco/share/AdventOfCode2023/{day:D2}/input";
         using var streamReader = new StreamReader(inputPath);
 
-        var totalPoints = 0;
+        var gamesList = ParseInput(streamReader);
 
+        for (int i = 0; i < gamesList.Count; i++)
+        {
+            int wins = gamesList[i].CountWins();
+            for (int j = 1; j <= wins; j++)
+            {
+                // this does not go out of bounds due to assumptions in the specification
+                gamesList[i + j].InstanceCount += gamesList[i].InstanceCount;
+            }
+        }
+
+        var totalInstances = gamesList.Select(g => g.InstanceCount).Sum();
+        System.Console.WriteLine(totalInstances);
+    }
+
+    private static List<Game> ParseInput(StreamReader streamReader)
+    {
+        var gamesList = new List<Game>();
         while (!streamReader.EndOfStream)
         {
             var line = streamReader.ReadLine()!;
             var game = ParseLine(line);
-
-            var intersection = game.WinningNumbers.Intersect(game.NumbersYouHave);
-            var intersectionCount = intersection.Count();
-            if (intersectionCount > 0)
-            {
-                totalPoints += (int)Math.Pow(2, intersection.Count() - 1);
-            }
+            gamesList.Add(game);
         }
-
-        System.Console.WriteLine(totalPoints);
+        return gamesList;
     }
 
     private static Game ParseLine(string line)
@@ -41,7 +51,8 @@ internal class Program
         var winningNumbers = GetNumbers(numberSets[0]);
         var myNumbers = GetNumbers(numberSets[1]);
 
-        return new Game{
+        return new Game
+        {
             Id = gameId,
             WinningNumbers = winningNumbers,
             NumbersYouHave = myNumbers
@@ -52,11 +63,18 @@ internal class Program
                 .Select(int.Parse)
                 .ToList();
     }
+}
 
-    internal sealed record Game
-    {
-        public int? Id { get; set; }
-        public required List<int> WinningNumbers { get; set; }
-        public required List<int> NumbersYouHave { get; set; }
-    }
+internal sealed record Game
+{
+    public int? Id { get; set; }
+    public required List<int> WinningNumbers { get; set; }
+    public required List<int> NumbersYouHave { get; set; }
+    public int InstanceCount { get; set; } = 1;
+}
+
+internal static class GameExtensions
+{
+    public static int CountWins(this Game game)
+        => game.WinningNumbers.Intersect(game.NumbersYouHave).Count();
 }
