@@ -47,7 +47,7 @@ internal class Hand
     private static readonly Dictionary<char, char> VeryConvenientMapDict = new()
     {
         {'T', 'a'},
-        {'J', 'b'},
+        {'J', '1'},
         {'Q', 'c'},
         {'K', 'd'},
         {'A', 'e'},
@@ -68,18 +68,20 @@ internal class Hand
     {
         get
         {
-            var groupedHand = RawHand.ToArray()
+            var countJ = Regex.Matches(RawHand, "J").Count;
+            var handWithoutJ = RawHand.Replace("J", null);
+            var groupedHand = handWithoutJ.ToArray()
                 .GroupBy(c => c)
                 .OrderByDescending(g => g.Count())
                 .ToArray();
 
             return groupedHand.Length switch
             {
-                1 => HandType.FiveEquals,
-                2 => groupedHand[0].Count() == 4
+                0 or 1 => HandType.FiveEquals, // either 5 J or only J and some other symbol
+                2 => groupedHand[0].Count() + countJ == 4
                         ? HandType.Poker
                         : HandType.Full,
-                3 => groupedHand[0].Count() == 3
+                3 => groupedHand[0].Count() + countJ == 3
                         ? HandType.Tris
                         : HandType.DoublePair,
                 4 => HandType.Pair,
