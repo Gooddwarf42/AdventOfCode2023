@@ -15,19 +15,31 @@ internal class Program
 
         var maps = ParseInput(streamReader).ToArray();
 
-        Func<long, long> compositeMap = input =>
+        var currentTestedValue = 0L;
+        const long maxIterations = 150000000;
+        while (currentTestedValue < maxIterations)
         {
-            var result = input;
-            foreach (var map in maps!)
+            if (currentTestedValue % 10000 == 0)
             {
-                result = map.Apply(result);
+                System.Console.WriteLine($"iteration {currentTestedValue}");
             }
-            return result;
-        };
+            var counterImages = new HashSet<long> { currentTestedValue };
 
-        var results = seeds.Select(s => s.GetMinimumApplicationResult(compositeMap));
+            for (int i = maps.Length - 1; i >= 0; i--)
+            {
+                counterImages = maps[i].CounterImage(counterImages);
+            }
 
-        System.Console.WriteLine(results.Min());
+            // check if any of the counterimages is in the seed collection
+            if (counterImages.Any(ci => seeds.Any(s => s.ContainsValue(ci))))
+            {
+                System.Console.WriteLine($"Valid seed found! it goes into location {currentTestedValue}");
+                return;
+            }
+
+            currentTestedValue++;
+        }
+        System.Console.WriteLine("Too bad, no eligible seed was found");
     }
 
 
@@ -104,6 +116,25 @@ internal sealed class Map
             .SingleOrDefault(mi => mi.ShouldApply(input)) // I guess I could replace this with FirstOrDefault, but I am curious to see if I get exceptions this way
             ?.Apply(input)
             ?? input;
+
+    public HashSet<long> CounterImage(HashSet<long> values) =>
+        values.SelectMany(l => GetCounterImage(l))
+              .ToHashSet();
+
+    private HashSet<long> GetCounterImage(long value)
+    {
+        var counterImages = MapItems
+            .Where(mi => mi.IsValueInOutputRange(value))
+            .Select(mi => mi.CounterImage(value))
+            .ToHashSet();
+
+        // add the value itself if there is no map mapping it directly
+        if (MapItems.All(mi => !mi.ShouldApply(value)))
+        {
+            counterImages.Add(value);
+        }
+        return counterImages;
+    }
 }
 
 internal sealed class MapItem
@@ -124,6 +155,20 @@ internal sealed class MapItem
 
         var offset = input - SourceRangeStart;
         return DestinationRangeStart + offset;
+    }
+
+    public bool IsValueInOutputRange(long value) =>
+        DestinationRangeStart <= value && value < (DestinationRangeStart + RangeLength);
+
+    public long CounterImage(long value)
+    {
+        if (!IsValueInOutputRange(value))
+        {
+            throw new Exception("Ma es mona?");
+        }
+
+        var offset = value - DestinationRangeStart;
+        return SourceRangeStart + offset;
     }
 }
 
@@ -146,4 +191,7 @@ internal sealed class Seeds
 
         return result;
     }
+
+    internal bool ContainsValue(long value) =>
+        RangeStart <= value && value < RangeStart + RangeLength;
 }
