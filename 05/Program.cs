@@ -1,5 +1,4 @@
-﻿
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 internal class Program
 {
@@ -11,21 +10,41 @@ internal class Program
         var inputPath = $"/home/marco/share/AdventOfCode2023/{day:D2}/input";
         using var streamReader = new StreamReader(inputPath);
 
-        // TODO get seeds
         var firstLine = streamReader.ReadLine()!;
-        var seeds = NumberRegex.Matches(firstLine).Select(m => long.Parse(m.Value));
+        var seeds = GetSeeds(firstLine);
 
-        var maps = ParseInput(streamReader);
+        var maps = ParseInput(streamReader).ToArray();
 
-        var result = seeds;
-
-        foreach(var map in maps)
+        Func<long, long> compositeMap = input =>
         {
-            result = result.Select(map.Apply);
-        }
+            var result = input;
+            foreach (var map in maps!)
+            {
+                result = map.Apply(result);
+            }
+            return result;
+        };
 
-        System.Console.WriteLine(result.Min());
+        var results = seeds.Select(s => s.GetMinimumApplicationResult(compositeMap));
+
+        System.Console.WriteLine(results.Min());
     }
+
+
+    private static IEnumerable<Seeds> GetSeeds(string firstLine)
+    {
+        var numbers = GetSeedsSimple(firstLine).ToArray();
+        for (int i = 0; i < numbers.Length; i += 2)
+        {
+            yield return new Seeds
+            {
+                RangeStart = numbers[i],
+                RangeLength = numbers[i + 1]
+            };
+        }
+    }
+    private static IEnumerable<long> GetSeedsSimple(string firstLine) =>
+        NumberRegex.Matches(firstLine).Select(m => long.Parse(m.Value));
 
     private static IEnumerable<Map> ParseInput(StreamReader streamReader)
     {
@@ -105,5 +124,26 @@ internal sealed class MapItem
 
         var offset = input - SourceRangeStart;
         return DestinationRangeStart + offset;
+    }
+}
+
+internal sealed class Seeds
+{
+    public required long RangeStart { get; init; }
+    public required long RangeLength { get; init; }
+
+    public long GetMinimumApplicationResult(Func<long, long> map)
+    {
+        var result = long.MaxValue;
+
+        for (int i = 0; i < RangeLength; i++)
+        {
+            var currentReulst = map(RangeStart + i);
+            result = currentReulst < result
+                ? currentReulst
+                : result;
+        }
+
+        return result;
     }
 }
