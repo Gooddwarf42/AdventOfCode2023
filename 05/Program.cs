@@ -3,6 +3,7 @@
 internal class Program
 {
     private static readonly Regex NumberRegex = new(@"\d+");
+    // TODO IMPROVE! Ideally a baackwards (or forwards) approach mapping intervals should work
 
     private static void Main(string[] args)
     {
