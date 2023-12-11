@@ -9,7 +9,7 @@ internal class Program
     private static void Main(string[] args)
     {
         const int day = 8;
-        var inputPath = $"input.txt";
+        var inputPath = $"input2.txt";
         using var streamReader = new StreamReader(inputPath);
         var movementSequence = streamReader.ReadLine()!.Trim().ToArray();
         _ = streamReader.ReadLine(); //discard empty line
