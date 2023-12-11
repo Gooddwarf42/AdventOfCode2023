@@ -1,0 +1,18 @@
+RL
+
+DDA = (DDA, DDB)
+DDB = (DDC, DDC)
+DDC = (DDA, DDD)
+DDD = (DDZ, DDA)
+DDZ = (DZZ, DDE)
+DDE = (DDF, DDA)
+DDF = (DDA, DZZ)
+DZZ = (DDA, EEF)
+EEA = (EEA, EEB)
+EEB = (EEC, EEA)
+EEC = (EEA, EED)
+EED = (EEE, EEA)
+EEE = (EEA, DDZ)
+EEF = (EEG, EZZ)
+EEG = (EEA, EEH)
+EEH = (EEA, EEA)
