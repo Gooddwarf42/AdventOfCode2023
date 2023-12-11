@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 internal class Program
 {
-    private static readonly Regex LocationRegex = new(@"[A-Z]{3}");
+    private static readonly Regex LocationRegex = new(@"([A-Z]|\d){3}");
 
     private static void Main(string[] args)
     {
@@ -16,18 +16,23 @@ internal class Program
 
         var maps = ParseInputMaps(streamReader);
 
-        var currentLocation = "AAA";
+        var currentLocations = maps.Keys.Where(s => s.EndsWith('A')).ToArray();
+
         var countSteps = 0;
         var currentMoveIndex = 0;
-        while (currentLocation != "ZZZ")
+        while (!currentLocations.All(s => s.EndsWith('Z')))
         {
-            var mapItem = maps[currentLocation];
-            currentLocation = movementSequence[currentMoveIndex] switch
+            for (int i = 0; i < currentLocations.Length; i++)
             {
-                'L' => mapItem.Left,
-                'R' => mapItem.Right,
-                _ => throw new Exception("mannaggia al mimmo")
-            };
+                var mapItem = maps[currentLocations[i]];
+                currentLocations[i] = movementSequence[currentMoveIndex] switch
+                {
+                    'L' => mapItem.Left,
+                    'R' => mapItem.Right,
+                    _ => throw new Exception("mannaggia al mimmo")
+                };
+            }
+            
             currentMoveIndex = (currentMoveIndex + 1) % movementSequence.Length;
             countSteps++;
         }
