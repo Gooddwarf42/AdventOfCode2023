@@ -9,7 +9,7 @@ internal class Program
     private static void Main(string[] args)
     {
         const int day = 8;
-        var inputPath = $"input3.txt";
+        var inputPath = $"input.txt";
         using var streamReader = new StreamReader(inputPath);
         var movementSequence = streamReader.ReadLine()!.Trim().ToArray();
         _ = streamReader.ReadLine(); //discard empty line
@@ -17,27 +17,51 @@ internal class Program
         var maps = ParseInputMaps(streamReader);
 
         var currentLocations = maps.Keys.Where(s => s.EndsWith('A')).ToArray();
+        var firstZs = currentLocations.Select(s => StepsToFirstZ(movementSequence, maps, s));
 
-        var countSteps = 0;
-        var currentMoveIndex = 0;
-        while (!currentLocations.All(s => s.EndsWith('Z')))
+        var lcm = 1L;
+        foreach(var value in firstZs){
+            lcm = LCM(lcm, value);
+        }
+
+        Console.WriteLine(lcm);
+    }
+
+    private static long GCD(long a, long b)
+    {
+        while (b != 0)
         {
-            for (int i = 0; i < currentLocations.Length; i++)
+            var temp = b;
+            b = a % b;
+            a = temp;
+        }
+        return a;
+    }
+
+    private static long LCM(long a, long b)
+    {
+        return (a / GCD(a, b)) * b;
+    }
+
+    private static long StepsToFirstZ(char[] movementSequence, Dictionary<string, MapItem> maps, string currentLocation)
+    {
+        var countSteps = 0L;
+        var currentMoveIndex = 0;
+        while (!currentLocation.EndsWith('Z'))
+        {
+            var mapItem = maps[currentLocation];
+            currentLocation = movementSequence[currentMoveIndex] switch
             {
-                var mapItem = maps[currentLocations[i]];
-                currentLocations[i] = movementSequence[currentMoveIndex] switch
-                {
-                    'L' => mapItem.Left,
-                    'R' => mapItem.Right,
-                    _ => throw new Exception("mannaggia al mimmo")
-                };
-            }
-            
+                'L' => mapItem.Left,
+                'R' => mapItem.Right,
+                _ => throw new Exception("mannaggia al mimmo")
+            };
+
             currentMoveIndex = (currentMoveIndex + 1) % movementSequence.Length;
             countSteps++;
         }
 
-        Console.WriteLine(countSteps);
+        return countSteps;
     }
 
     private static Dictionary<string, MapItem> ParseInputMaps(StreamReader streamReader)
