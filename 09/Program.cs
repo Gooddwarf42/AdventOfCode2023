@@ -1,7 +1,5 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-using System.Text.RegularExpressions;
-
 internal class Program
 {
     private static void Main(string[] args)
@@ -9,11 +7,31 @@ internal class Program
         var inputPath = $"input.txt";
         using var streamReader = new StreamReader(inputPath);
 
-        System.Console.WriteLine($"Testing 50 choose 25: {MathUtilities.Binom(50, 46)}");
-
+        var total = 0L;
+        foreach (var sequence in ParseInput(streamReader))
+        {
+            var nextNumber = ComputeNext(sequence);
+            System.Console.WriteLine($"To extend the sequence you need {nextNumber}");
+            total += nextNumber;
+        }
+        System.Console.WriteLine($"The solution of the problem is {total}");
         MathUtilities.PrintComputedBinoms();
     }
 
+    private static long ComputeNext(int[] sequence)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static IEnumerable<int[]> ParseInput(StreamReader streamReader)
+    {
+        while (!streamReader.EndOfStream)
+        {
+            var line = streamReader.ReadLine();
+            yield return line!.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(st => int.Parse(st)).ToArray();
+        }
+    }
 
 }
 
@@ -23,7 +41,7 @@ internal static class MathUtilities
     private static List<long[]> _binom = [[1]];
     public static long Binom(int n, int k)
     {
-        var meaningfulEntries = (int)Math.Ceiling((n + 1)  / 2.0);
+        var meaningfulEntries = (int)Math.Ceiling((n + 1) / 2.0);
 
         if (k < 0 || k > n)
         {
