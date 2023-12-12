@@ -20,7 +20,22 @@ internal class Program
 
     private static long ComputeNext(int[] sequence)
     {
-        throw new NotImplementedException();
+        var coefficients = new long[sequence.Length];
+
+        for (int i = 0; i < sequence.Length; i++)
+        {
+            var sumToSubtract = 0L;
+            for (int j = 0; j < i; j++)
+            {
+                sumToSubtract += coefficients[j] * MathUtilities.Binom(i, j);
+            }
+            coefficients[i] = sequence[i] - sumToSubtract;
+        }
+        System.Console.WriteLine($"coefficients: {string.Join(' ', coefficients)}");
+
+        return coefficients
+                    .Select((a, j) => a * MathUtilities.Binom(sequence.Length, j))
+                    .Sum();
     }
 
     private static IEnumerable<int[]> ParseInput(StreamReader streamReader)
