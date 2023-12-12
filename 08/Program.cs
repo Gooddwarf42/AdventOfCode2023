@@ -8,7 +8,6 @@ internal class Program
 
     private static void Main(string[] args)
     {
-        const int day = 8;
         var inputPath = $"input.txt";
         using var streamReader = new StreamReader(inputPath);
         var movementSequence = streamReader.ReadLine()!.Trim().ToArray();
