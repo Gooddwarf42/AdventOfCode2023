@@ -9,7 +9,7 @@ internal class Program
         var inputPath = $"input.txt";
         using var streamReader = new StreamReader(inputPath);
 
-        System.Console.WriteLine($"Testing 50 choose 25: {MathUtilities.Binom(50, 25)}");
+        System.Console.WriteLine($"Testing 50 choose 25: {MathUtilities.Binom(50, 46)}");
 
         MathUtilities.PrintComputedBinoms();
     }
@@ -23,9 +23,16 @@ internal static class MathUtilities
     private static List<long[]> _binom = [[1]];
     public static long Binom(int n, int k)
     {
+        var meaningfulEntries = (int)Math.Ceiling((n + 1)  / 2.0);
+
         if (k < 0 || k > n)
         {
             return 0;
+        }
+
+        if (k >= meaningfulEntries)
+        {
+            return Binom(n, n - k);
         }
 
         if (BinomAlreadyComputed(n, k))
@@ -35,10 +42,11 @@ internal static class MathUtilities
 
         var result = Binom(n - 1, k - 1) + Binom(n - 1, k);
 
-        //if previous rows are needed they were computed by previous recursive calls!
+        // if previous rows are needed they were computed by previous recursive calls!
+        // this is equivalent to _binom.Count == n
         if (_binom.Count <= n)
         {
-            _binom.Add(new long[n + 1]);
+            _binom.Add(new long[meaningfulEntries]);
         }
         _binom[n][k] = result;
         return result;
