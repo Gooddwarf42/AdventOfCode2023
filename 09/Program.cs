@@ -10,15 +10,34 @@ internal class Program
         var total = 0L;
         foreach (var sequence in ParseInput(streamReader))
         {
-            var nextNumber = ComputeNext(sequence);
-            System.Console.WriteLine($"To extend the sequence you need {nextNumber}");
-            total += nextNumber;
+            var previousNumber = ComputePrevious(sequence);
+            System.Console.WriteLine($"To extend the sequence backwards you need {previousNumber}");
+            total += previousNumber;
         }
         System.Console.WriteLine($"The solution of the problem is {total}");
         MathUtilities.PrintComputedBinoms();
     }
 
-    private static long ComputeNext(int[] sequence)
+    private static long ComputePrevious(int[] sequence)
+    {
+        var coefficients = ComputeCoefficients(sequence);
+        var extensionArray = new long[coefficients.Length];
+        extensionArray[coefficients.Length - 1] = 0;
+        for (int i = coefficients.Length - 2; i >= 0; i--)
+        {
+            extensionArray[i] = coefficients[i] - extensionArray[i + 1];
+        }
+        return extensionArray[0];
+    }
+
+    // General nomenclature: I call "coefficients" the elements of the left side of the triangle, since they are the coefficients I need to compute the next elemeno.
+
+    private static long ComputeNext(int[] sequence) =>
+        ComputeCoefficients(sequence)
+            .Select((a, j) => a * MathUtilities.Binom(sequence.Length, j))
+            .Sum();
+
+    private static long[] ComputeCoefficients(int[] sequence)
     {
         var coefficients = new long[sequence.Length];
 
@@ -32,10 +51,7 @@ internal class Program
             coefficients[i] = sequence[i] - sumToSubtract;
         }
         System.Console.WriteLine($"coefficients: {string.Join(' ', coefficients)}");
-
-        return coefficients
-                    .Select((a, j) => a * MathUtilities.Binom(sequence.Length, j))
-                    .Sum();
+        return coefficients;
     }
 
     private static IEnumerable<int[]> ParseInput(StreamReader streamReader)
