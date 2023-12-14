@@ -2,7 +2,16 @@
 
 internal class Program
 {
-    private static char[] PipeCharArray = ['|', '-', 'L', 'J', '7', 'F', 'S'];
+    private static readonly Dictionary<char, Directions> PipeCharArray = new()
+    {
+        { '|', Directions.U | Directions.D },
+        { '-', Directions.L | Directions.R },
+        { 'L', Directions.U | Directions.R },
+        { 'J', Directions.L | Directions.U },
+        { '7', Directions.L | Directions.D },
+        { 'F', Directions.R | Directions.D },
+        { 'S', Directions.All }
+    };
 
     public static void Main(string[] args)
     {
@@ -15,22 +24,30 @@ internal class Program
         }
 
         var currentPosition = FindS(map);
-        var nextPositionChar = 'N'; //random unused character to denote not initialized variable
+        var nextPositionChar = 'S'; //random unused character to denote not initialized variable
         var countSteps = 0;
         var lastMovement = Directions.U;
         var newPosition = (i: -1, j: -1);
 
-        while (nextPositionChar != 'S')
+        do
         {
-            var cameFrom = lastMovement.ChangeMovement(2);
+            var cameFrom = lastMovement.RotateNibbleLeft(2);
 
             //find next pipe
             for (int i = 1; i <= 3; i++)
             {
-                lastMovement = cameFrom.ChangeMovement(i);
+                lastMovement = cameFrom.RotateNibbleLeft(i);
                 newPosition = lastMovement.PerformOn(currentPosition);
-                if (IsPipe(map[newPosition.i][newPosition.j]))
+
+                if (!PipeCharArray[nextPositionChar].HasFlag(lastMovement))
                 {
+                    continue;
+                }
+
+                if (IsMovementValid(map[newPosition.i][newPosition.j], lastMovement.RotateNibbleLeft(2)))
+                {
+                    Console.WriteLine($"Valid movement: {lastMovement.ToString()}");
+                    Console.WriteLine($"Moving to: {newPosition}");
                     break;
                 }
 
@@ -42,15 +59,20 @@ internal class Program
 
             currentPosition = newPosition;
             nextPositionChar = map[currentPosition.i][currentPosition.j];
+            Console.WriteLine($"New char: {nextPositionChar}");
+            Console.WriteLine("");
 
             countSteps++;
-        }
+        } while (nextPositionChar != 'S');
 
-        Console.WriteLine(countSteps);
+        Console.WriteLine(countSteps / 2);
     }
 
-    private static bool IsPipe(char c) => PipeCharArray.Contains(c);
-
+    private static bool IsMovementValid(char c, Directions lastMovement)
+    {
+        var cIsPipeChar = PipeCharArray.TryGetValue(c, out var validDirections);
+        return cIsPipeChar && validDirections.HasFlag(lastMovement);
+    }
 
     private static (int i, int j) FindS(List<char[]> map)
     {
@@ -77,12 +99,14 @@ internal class Program
     }
 }
 
+[Flags]
 internal enum Directions
 {
-    U = 0,
-    R = 1,
-    D = 2,
-    L = 3,
+    U = 1,
+    R = 2,
+    D = 4,
+    L = 8,
+    All = U | R | D | L,
 }
 
 internal static class DirectionsExtensions
@@ -90,6 +114,13 @@ internal static class DirectionsExtensions
     // assume positive offset
     public static Directions ChangeMovement(this Directions source, int offset) =>
         (Directions)((int)(source + offset) % 4);
+
+
+    public static Directions RotateNibbleLeft(this Directions source, int offset) =>
+        offset > 3
+            ? throw new ArgumentException(null, nameof(offset))
+            : (Directions)((((uint)source << offset) | ((uint)source >> 4 - offset)) & (uint)0b1111);
+
 
     public static (int i, int j) PerformOn(this Directions source, (int i, int j) position) =>
         source switch
