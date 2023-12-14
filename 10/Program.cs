@@ -18,10 +18,17 @@ internal class Program
         var inputPath = $"input.txt";
         using var streamReader = new StreamReader(inputPath);
         var map = ParseInput(streamReader).ToList();
+        List<LoopTile> loop = FindLoop(map);
+
+        Console.WriteLine(loop.Count / 2);
+    }
+
+    private static List<LoopTile> FindLoop(List<char[]> map)
+    {
+        var loop = new List<LoopTile>();
 
         var currentPosition = FindS(map);
         var currentPositionChar = 'S';
-        var countSteps = 0;
         var lastMovement = Direction.U; //Irrelevant value
 
         do
@@ -30,16 +37,29 @@ internal class Program
             var nextMovement = currentPositionChar == 'S'
                 ? FindMovementToAdjacentUseablePipe(map, currentPosition)
                 : FindNextMovement(currentPositionChar, cameFrom);
+
+            loop.Add(new()
+            {
+                TileType = currentPositionChar,
+                Coordinates = currentPosition,
+                Entering = cameFrom, //note: for the S tile, this is wrong! Adjust it later!
+                Leaving = nextMovement,
+            });
+
             var newPosition = nextMovement.PerformOn(currentPosition);
 
             lastMovement = nextMovement;
             currentPosition = newPosition;
             currentPositionChar = map[currentPosition.i][currentPosition.j];
-
-            countSteps++;
         } while (currentPositionChar != 'S');
 
-        Console.WriteLine(countSteps / 2);
+        // fix S Entering value and TileType
+        loop[0].Entering = loop.Last().Leaving.RotateNibbleLeft(2);
+        loop[0].TileType = PipeCharArray
+            .Single(kvp => kvp.Value == (loop[0].Entering | loop[0].Leaving))
+            .Key;
+
+        return loop;
     }
 
     private static Direction FindNextMovement(char currentPositionChar, Direction cameFrom)
@@ -94,6 +114,14 @@ internal class Program
             yield return streamReader.ReadLine()!.ToCharArray();
         }
     }
+}
+
+internal sealed class LoopTile
+{
+    public required char TileType { get; set; }
+    public required (int i, int j) Coordinates { get; init; }
+    public required Direction Entering { get; set; }
+    public required Direction Leaving { get; init; }
 }
 
 [Flags]
