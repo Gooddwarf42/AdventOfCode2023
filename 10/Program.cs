@@ -2,15 +2,15 @@
 
 internal class Program
 {
-    private static readonly Dictionary<char, Directions> PipeCharArray = new()
+    private static readonly Dictionary<char, Direction> PipeCharArray = new()
     {
-        { '|', Directions.U | Directions.D },
-        { '-', Directions.L | Directions.R },
-        { 'L', Directions.U | Directions.R },
-        { 'J', Directions.L | Directions.U },
-        { '7', Directions.L | Directions.D },
-        { 'F', Directions.R | Directions.D },
-        { 'S', Directions.All }
+        { '|', Direction.U | Direction.D },
+        { '-', Direction.L | Direction.R },
+        { 'L', Direction.U | Direction.R },
+        { 'J', Direction.L | Direction.U },
+        { '7', Direction.L | Direction.D },
+        { 'F', Direction.R | Direction.D },
+        { 'S', Direction.All }
     };
 
     public static void Main(string[] args)
@@ -18,57 +18,54 @@ internal class Program
         var inputPath = $"input.txt";
         using var streamReader = new StreamReader(inputPath);
         var map = ParseInput(streamReader).ToList();
-        foreach (var line in map)
-        {
-            Console.WriteLine(string.Join(null, line));
-        }
 
         var currentPosition = FindS(map);
-        var nextPositionChar = 'S'; //random unused character to denote not initialized variable
+        var currentPositionChar = 'S';
         var countSteps = 0;
-        var lastMovement = Directions.U;
-        var newPosition = (i: -1, j: -1);
+        var lastMovement = Direction.U; //Irrelevant value
 
         do
         {
             var cameFrom = lastMovement.RotateNibbleLeft(2);
+            var nextMovement = currentPositionChar == 'S'
+                ? FindMovementToAdjacentUseablePipe(map, currentPosition)
+                : FindNextMovement(currentPositionChar, cameFrom);
+            var newPosition = nextMovement.PerformOn(currentPosition);
 
-            //find next pipe
-            for (int i = 1; i <= 3; i++)
-            {
-                lastMovement = cameFrom.RotateNibbleLeft(i);
-                newPosition = lastMovement.PerformOn(currentPosition);
-
-                if (!PipeCharArray[nextPositionChar].HasFlag(lastMovement))
-                {
-                    continue;
-                }
-
-                if (IsMovementValid(map[newPosition.i][newPosition.j], lastMovement.RotateNibbleLeft(2)))
-                {
-                    Console.WriteLine($"Valid movement: {lastMovement.ToString()}");
-                    Console.WriteLine($"Moving to: {newPosition}");
-                    break;
-                }
-
-                if (i == 3)
-                {
-                    throw new Exception("Sanity check qui non arrivo");
-                }
-            }
-
+            lastMovement = nextMovement;
             currentPosition = newPosition;
-            nextPositionChar = map[currentPosition.i][currentPosition.j];
-            Console.WriteLine($"New char: {nextPositionChar}");
-            Console.WriteLine("");
+            currentPositionChar = map[currentPosition.i][currentPosition.j];
 
             countSteps++;
-        } while (nextPositionChar != 'S');
+        } while (currentPositionChar != 'S');
 
         Console.WriteLine(countSteps / 2);
     }
 
-    private static bool IsMovementValid(char c, Directions lastMovement)
+    private static Direction FindNextMovement(char currentPositionChar, Direction cameFrom)
+    {
+        var availableDirections = PipeCharArray[currentPositionChar];
+        return availableDirections ^ cameFrom;
+    }
+
+    private static Direction FindMovementToAdjacentUseablePipe(List<char[]> map, (int i, int j) currentPosition)
+    {
+        var currentAttempt = Direction.U;
+        for (int i = 0; i < 4; i++)
+        {
+            currentAttempt = currentAttempt.RotateNibbleLeft(1);
+
+            var newPosition = currentAttempt.PerformOn(currentPosition);
+            if (IsMovementToHereValid(map[newPosition.i][newPosition.j], currentAttempt.RotateNibbleLeft(2)))
+            {
+                return currentAttempt;
+            }
+        }
+
+        throw new Exception("MIMMO");
+    }
+
+    private static bool IsMovementToHereValid(char c, Direction lastMovement)
     {
         var cIsPipeChar = PipeCharArray.TryGetValue(c, out var validDirections);
         return cIsPipeChar && validDirections.HasFlag(lastMovement);
@@ -100,7 +97,7 @@ internal class Program
 }
 
 [Flags]
-internal enum Directions
+internal enum Direction
 {
     U = 1,
     R = 2,
@@ -112,23 +109,23 @@ internal enum Directions
 internal static class DirectionsExtensions
 {
     // assume positive offset
-    public static Directions ChangeMovement(this Directions source, int offset) =>
-        (Directions)((int)(source + offset) % 4);
+    public static Direction ChangeMovement(this Direction source, int offset) =>
+        (Direction)((int)(source + offset) % 4);
 
 
-    public static Directions RotateNibbleLeft(this Directions source, int offset) =>
+    public static Direction RotateNibbleLeft(this Direction source, int offset) =>
         offset > 3
             ? throw new ArgumentException(null, nameof(offset))
-            : (Directions)((((uint)source << offset) | ((uint)source >> 4 - offset)) & (uint)0b1111);
+            : (Direction)((((uint)source << offset) | ((uint)source >> 4 - offset)) & (uint)0b1111);
 
 
-    public static (int i, int j) PerformOn(this Directions source, (int i, int j) position) =>
+    public static (int i, int j) PerformOn(this Direction source, (int i, int j) position) =>
         source switch
         {
-            Directions.U => (position.i - 1, position.j),
-            Directions.R => (position.i, position.j + 1),
-            Directions.D => (position.i + 1, position.j),
-            Directions.L => (position.i, position.j - 1),
+            Direction.U => (position.i - 1, position.j),
+            Direction.R => (position.i, position.j + 1),
+            Direction.D => (position.i + 1, position.j),
+            Direction.L => (position.i, position.j - 1),
             _ => throw new ArgumentOutOfRangeException(nameof(source), source, null)
         };
 }
