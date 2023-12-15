@@ -19,8 +19,58 @@ internal class Program
         using var streamReader = new StreamReader(inputPath);
         var map = ParseInput(streamReader).ToList();
         List<LoopTile> loop = FindLoop(map);
+        var area = GetLoopArea(loop);
+        Console.WriteLine(area);
+    }
 
-        Console.WriteLine(loop.Count / 2);
+    private static int GetLoopArea(List<LoopTile> loop)
+    {
+        var scannedLoop = loop
+            .OrderBy(lt => lt.Coordinates.j)
+            .GroupBy(lt => lt.Coordinates.i)
+            .ToArray();
+
+        var area = 0;
+        foreach (var row in scannedLoop)
+        {
+            var verticalWalls = GerVerticalWalls(row).ToArray();
+
+            for (int k = 0; k < verticalWalls.Length; k += 2)
+            {
+                // | . . L - - J . . |
+                // | . . . . . |
+                var totalSpacesInBetween = verticalWalls[k + 1].Tile.Coordinates.j
+                    - verticalWalls[k].Tile.Coordinates.j
+                    - 1;
+                var otherWallsInBetween = verticalWalls[k + 1].Index
+                    - verticalWalls[k].Index
+                    - 1;
+
+                area += totalSpacesInBetween - otherWallsInBetween;
+            }
+        }
+
+        return area;
+    }
+
+    private static IEnumerable<(LoopTile Tile, int Index)> GerVerticalWalls(IGrouping<int, LoopTile> row)
+    {
+        var rowWithIndices = row
+            .Select((t, i) => (Tile: t, Index: i));
+
+        var allVerticalWalls = new[] { '|', '7', 'F' };
+
+        return rowWithIndices.Where(t => allVerticalWalls.Contains(t.Tile.TileType));
+        // foreach (var loopTile in rowWithInices)
+        // {
+
+        //     // if (lookingForOpening && openingWalls.Contains(loopTile.Tile.TileType)
+        //     //     || !lookingForOpening && closingWalls.Contains(loopTile.Tile.TileType))
+        //     // {
+        //     //     lookingForOpening = !lookingForOpening;
+        //     //     yield return loopTile;
+        //     // }
+        // }
     }
 
     private static List<LoopTile> FindLoop(List<char[]> map)
