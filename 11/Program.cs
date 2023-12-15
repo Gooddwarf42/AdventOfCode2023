@@ -7,17 +7,25 @@
         var universe = ParseInput(streamReader).ToArray();
         var rowsToExpand = universe
             .Select((r, i) => (Row: r, Index: i))
-            .Where(tuple => tuple.Row.ToCharArray().All(c => c == '.'))
+            .Where(tuple => tuple.Row.All(c => c == '.'))
             .Select(tuple => tuple.Index);
-        var columnsToExpand = //TODO;
 
+        var columnsToExpand = universe[0]
+            .Select((c, i) => (Col: c, Index: i))
+            .Where(tuple => universe
+                .Select(r => r[tuple.Index])
+                .All(c => c == '.')
+            )
+            .Select(tuple => tuple.Index);
+        
+        
     }
 
-    private static IEnumerable<string> ParseInput(StreamReader streamReader)
+    private static IEnumerable<char[]> ParseInput(StreamReader streamReader)
     {
         while (!streamReader.EndOfStream)
         {
-            yield return streamReader.ReadLine()!;
+            yield return streamReader.ReadLine()!.ToCharArray();
         }
     }
 }
