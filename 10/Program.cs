@@ -13,12 +13,14 @@ internal class Program
         { 'S', Direction.All }
     };
 
+    private static readonly char[] VerticalWallsChars = { 'F', '|', '7' };
+
     public static void Main(string[] args)
     {
-        var inputPath = $"input.txt";
+        const string inputPath = "input.txt";
         using var streamReader = new StreamReader(inputPath);
         var map = ParseInput(streamReader).ToList();
-        List<LoopTile> loop = FindLoop(map);
+        var loop = FindLoop(map);
         var area = GetLoopArea(loop);
         Console.WriteLine(area);
     }
@@ -33,44 +35,37 @@ internal class Program
         var area = 0;
         foreach (var row in scannedLoop)
         {
-            var verticalWalls = GerVerticalWalls(row).ToArray();
+            var verticalWalls = row
+                .Select((t, i) => (Tile: t, Index: i))
+                .Where(t => VerticalWallsChars.Contains(t.Tile.TileType))
+                .ToArray();
 
             for (int k = 0; k < verticalWalls.Length; k += 2)
             {
-                // | . . L - - J . . |
-                // | . . . . . |
+                // Count the tiles between two vertical walls, and remove any tile which is used by the loop
+                /*
+                   ...........
+                   .S-------7.
+                   .|F-----7|.
+                   .||OOOOO||.
+                   .||OOOOO||.
+                   .|L-7OF-J|.   <---   Observe this row. Why are my vertical walls just F | 7? Imagine in scanning this row I am looking at the
+                   .|II|O|II|.          bound with the followign row. In this way I actually only intersect vertical walls, thus my resoning works.
+                   .L--JOL--J.          You can just count the spaces between two following vertical walls, subtracting other pieces of pipe in between.
+                   .....O.....
+                */
                 var totalSpacesInBetween = verticalWalls[k + 1].Tile.Coordinates.j
-                    - verticalWalls[k].Tile.Coordinates.j
-                    - 1;
-                var otherWallsInBetween = verticalWalls[k + 1].Index
-                    - verticalWalls[k].Index
-                    - 1;
+                                           - verticalWalls[k].Tile.Coordinates.j
+                                           - 1;
+                var otherPipePiecesInBetween = verticalWalls[k + 1].Index
+                                               - verticalWalls[k].Index
+                                               - 1;
 
-                area += totalSpacesInBetween - otherWallsInBetween;
+                area += totalSpacesInBetween - otherPipePiecesInBetween;
             }
         }
 
         return area;
-    }
-
-    private static IEnumerable<(LoopTile Tile, int Index)> GerVerticalWalls(IGrouping<int, LoopTile> row)
-    {
-        var rowWithIndices = row
-            .Select((t, i) => (Tile: t, Index: i));
-
-        var allVerticalWalls = new[] { '|', '7', 'F' };
-
-        return rowWithIndices.Where(t => allVerticalWalls.Contains(t.Tile.TileType));
-        // foreach (var loopTile in rowWithInices)
-        // {
-
-        //     // if (lookingForOpening && openingWalls.Contains(loopTile.Tile.TileType)
-        //     //     || !lookingForOpening && closingWalls.Contains(loopTile.Tile.TileType))
-        //     // {
-        //     //     lookingForOpening = !lookingForOpening;
-        //     //     yield return loopTile;
-        //     // }
-        // }
     }
 
     private static List<LoopTile> FindLoop(List<char[]> map)
@@ -88,7 +83,7 @@ internal class Program
                 ? FindMovementToAdjacentUseablePipe(map, currentPosition)
                 : FindNextMovement(currentPositionChar, cameFrom);
 
-            loop.Add(new()
+            loop.Add(new LoopTile
             {
                 TileType = currentPositionChar,
                 Coordinates = currentPosition,
@@ -195,7 +190,6 @@ internal static class DirectionsExtensions
         offset > 3
             ? throw new ArgumentException(null, nameof(offset))
             : (Direction)((((uint)source << offset) | ((uint)source >> 4 - offset)) & (uint)0b1111);
-
 
     public static (int i, int j) PerformOn(this Direction source, (int i, int j) position) =>
         source switch
