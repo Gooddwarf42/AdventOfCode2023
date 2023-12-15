@@ -11,12 +11,11 @@
             .Select(tuple => tuple.Index);
 
         var columnsToExpand = universe[0]
-            .Select((c, i) => (Col: c, Index: i))
-            .Where(tuple => universe
-                .Select(r => r[tuple.Index])
+            .Select((_, j) => j)
+            .Where(j => universe
+                .Select(row => row[j])
                 .All(c => c == '.')
-            )
-            .Select(tuple => tuple.Index);
+            );
         
         
     }
