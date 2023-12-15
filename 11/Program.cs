@@ -8,22 +8,20 @@
         var rowsToExpand = universe
             .Select((r, i) => (Row: r, Index: i))
             .Where(tuple => tuple.Row.All(c => c == '.'))
-            .Select(tuple => tuple.Index);
+            .Select(tuple => tuple.Index)
+            .ToArray();
 
         var columnsToExpand = universe[0]
             .Select((_, j) => j)
             .Where(j => universe
                 .Select(row => row[j])
                 .All(c => c == '.')
-            );
+            )
+            .ToArray();
 
         var galaxiesPositions = FindGalaxies(universe).ToArray();
 
-        // saving distances in case they are needed for part 2
-        var distances = new int[galaxiesPositions.Length, galaxiesPositions.Length];
-
-        var sum = 0;
-
+        var sum = 0L;
         for (int i = 0; i < galaxiesPositions.Length; i++)
         {
             var currentGalaxy = galaxiesPositions[i];
@@ -34,18 +32,16 @@
                                + Math.Abs(currentGalaxy.ColIdx - otherGalaxy.ColIdx);
                 var realdistance = distance + CountExpansionBetween(currentGalaxy, otherGalaxy, rowsToExpand, columnsToExpand);
                 sum += realdistance;
-                distances[i, j] = realdistance;
             }
         }
-
         Console.WriteLine(sum);
     }
 
-    private static int CountExpansionBetween((int RowIdx, int ColIdx) currentGalaxy, (int RowIdx, int ColIdx) otherGalaxy, IEnumerable<int> rowsToExpand, IEnumerable<int> columnsToExpand)
+    private static long CountExpansionBetween((int RowIdx, int ColIdx) currentGalaxy, (int RowIdx, int ColIdx) otherGalaxy, IEnumerable<int> rowsToExpand, IEnumerable<int> columnsToExpand)
     {
         var rowExpansions = rowsToExpand.Count(i => Math.Min(currentGalaxy.RowIdx, otherGalaxy.RowIdx) < i && i < Math.Max(currentGalaxy.RowIdx, otherGalaxy.RowIdx));
         var colExpansions = columnsToExpand.Count(j => Math.Min(currentGalaxy.ColIdx, otherGalaxy.ColIdx) < j && j < Math.Max(currentGalaxy.ColIdx, otherGalaxy.ColIdx));
-        return rowExpansions + colExpansions;
+        return (rowExpansions + colExpansions) * 999999;
     }
     
 
