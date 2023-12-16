@@ -21,10 +21,12 @@ internal class Program
         {
             var line = streamReader.ReadLine()!;
             var lineSplit = line.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            // assume lineSplit has always two elements. If something goes horribly wrong I can throw here a panic exception, but lazy
             yield return new Picross
             {
                 Schema = lineSplit[0].ToCharArray().ToList(),
-                Constraints = lineSplit[1].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                Constraints = lineSplit[1]
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                     .Select(s => int.Parse(s))
                     .ToList(),
             };
