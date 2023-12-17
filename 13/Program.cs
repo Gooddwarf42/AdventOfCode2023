@@ -1,10 +1,15 @@
 
 
 
+using System.Diagnostics;
+
 internal class Program
 {
     private static void Main(string[] args)
     {
+        var sw = new Stopwatch();
+        sw.Start();
+
         const string inputPath = "input.txt";
         using var streamReader = new StreamReader(inputPath);
         var patterns = ParseInput(streamReader);
@@ -14,7 +19,28 @@ internal class Program
         {
             sumOfSummaries += GetSummary(pattern);
         }
+
+        sw.Stop();
+        System.Console.WriteLine($"Time: {sw.ElapsedMilliseconds}");
+
         System.Console.WriteLine(sumOfSummaries);
+    }
+
+    private static int CharArrayDistance(char[] a, char[] b)
+    {
+        if (a.Length != b.Length)
+        {
+            throw new Exception("Invalid use of this method");
+        }
+        var count = 0;
+        for (int i = 0; i < a.Length; i++)
+        {
+            if (a[i] != b[i])
+            {
+                count++;
+            }
+        }
+        return count;
     }
 
     private static int GetSummary(char[][] pattern)
@@ -46,7 +72,7 @@ internal class Program
         return FindReflectionInStringified(stringifiedRows);
     }
 
-    private static int? FindReflectionInStringified(string[] stringifiedLines)
+    private static int? FindReflectionInStringified(char[][] stringifiedLines)
     {
         for (int i = 0; i < stringifiedLines.Length - 1; i++)
         {
@@ -58,34 +84,44 @@ internal class Program
         return null;
     }
 
-    private static bool CheckSimmetryInStringified(string[] stringifiedLines, int reflectionIndex)
+    private static bool CheckSimmetryInStringified(char[][] stringifiedLines, int reflectionIndex)
     {
         var i = reflectionIndex;
         var j = reflectionIndex + 1;
-        var isSymmetric = true;
+        var smudgeFound = 0;
 
         while (i >= 0 && j < stringifiedLines.Length)
         {
-            if (stringifiedLines[i] != stringifiedLines[j])
+            var distance = CharArrayDistance(stringifiedLines[i], stringifiedLines[j]);
+            if (distance > 1)
             {
-                isSymmetric = false;
-                break;
+                // no way!
+                return false;
             }
+            if (distance == 1)
+            {
+                //potential smudge
+                smudgeFound++;
+            }
+
+            if (smudgeFound > 1)
+            {
+                // too many smudges!
+                return false;
+            }
+
             i--;
             j++;
         }
-        return isSymmetric;
-
+        return smudgeFound == 1;
     }
 
-    private static IEnumerable<string> StringifyByRow(char[][] pattern) =>
-        pattern.Select(charArray => string.Join(null, charArray));
-    private static IEnumerable<string> StringifyByCol(char[][] pattern)
-    {
-        var columnsEnumerable = pattern[0]
-            .Select((_, j) => pattern.Select(row => row[j]).ToArray()); //huh, this pretty much transposes a matrix, cool
-        return columnsEnumerable.Select(charArray => string.Join(null, charArray));
-    }
+    //pretty much useless, but keeps things symmetric xD
+    private static IEnumerable<char[]> StringifyByRow(char[][] pattern) =>
+        pattern.AsEnumerable();
+    private static IEnumerable<char[]> StringifyByCol(char[][] pattern) =>
+        pattern[0]
+            .Select((_, j) => pattern.Select(row => row[j]).ToArray());
 
     private static IEnumerable<char[][]> ParseInput(StreamReader streamReader)
     {
