@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 
@@ -15,26 +16,29 @@ internal class Program
         var input = streamReader.ReadLine();
 
         var inputSequence = ParseInput(input!).ToArray();
-        var boxes = new Dictionary<string, int>?[256];
+        var boxes = new OrderedDictionary?[256];
         PlaceLensesInBoxes(inputSequence, boxes);
         var sumOfFocusingPower = ComputeSumOfFocusingPower(boxes);
         sw.Stop();
         System.Console.WriteLine($"Time: {sw.ElapsedMilliseconds}");
 
-        System.Console.WriteLine(42);
+        System.Console.WriteLine(sumOfFocusingPower);
     }
 
-    private static void PlaceLensesInBoxes(SequenceElement[] inputSequence, Dictionary<string, int>?[] boxes)
+    private static void PlaceLensesInBoxes(SequenceElement[] inputSequence, OrderedDictionary?[] boxes)
     {
-        throw new NotImplementedException();
+        foreach (var sequenceElement in inputSequence)
+        {
+            sequenceElement.Apply(boxes);
+        }
     }
 
-    private static object ComputeSumOfFocusingPower(Dictionary<string, int>?[] boxes)
+    private static int ComputeSumOfFocusingPower(OrderedDictionary?[] boxes)
     {
         var sum = 0;
         for (var i = 0; i < boxes.Length; i++)
         {
-            var box = boxes[i]?.ToList();
+            var box = boxes[i];
             if (box is null)
             {
                 continue;
@@ -42,8 +46,7 @@ internal class Program
 
             for (var j = 0; j < box.Count; j++)
             {
-                var lens = box[i];
-                sum += (i + 1) * (j + 1) * lens.Value;
+                sum += (i + 1) * (j + 1) * (int)box[j]!;
             }
         }
 
@@ -58,7 +61,7 @@ internal class Program
 
         foreach (var rawSequenceElement in sequenceElements)
         {
-            var match = sequenceElementRegex.Match(rawSequenceElement)!;
+            var match = sequenceElementRegex.Match(rawSequenceElement);
             if (!match.Success)
             {
                 throw new Exception("Mimmo la regex!");
@@ -99,6 +102,27 @@ internal class Program
         public required string Label { get; init; }
         public required char Operand { get; init; }
         public int? FocalLength { get; init; }
-        public int LabelHash => ComputeHash(Label);
+        private int LabelHash => ComputeHash(Label);
+
+        public void Apply(OrderedDictionary?[] boxes)
+        {
+            // assume boxes hass length 256
+            switch (Operand)
+            {
+                case '=':
+                    boxes[LabelHash] ??= new OrderedDictionary();
+                    boxes[LabelHash]![Label] = FocalLength!.Value;
+                    break;
+                case '-':
+                    if (boxes[LabelHash]?.Contains(Label) is true)
+                    {
+                        boxes[LabelHash]!.Remove(Label);
+                    }
+
+                    break;
+                default:
+                    throw new Exception("InvalidOperand");
+            }
+        }
     }
 }
