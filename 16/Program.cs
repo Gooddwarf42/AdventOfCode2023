@@ -2,6 +2,7 @@
 
 using System.Collections.Specialized;
 using System.Diagnostics;
+using System.Reflection.PortableExecutable;
 
 internal class Program
 {
@@ -23,13 +24,23 @@ internal class Program
         };
 
         // I shall be lazy this time
-        var mimmo = Enumerable.Repeat(new bool[map[0].Length], map.Length).ToArray();
-        var energizedMap = new bool[map.Length, map[0].Length];
+        var mimmo = new char[map.Length][];
+        for (int i = 0; i < map[0].Length; i++)
+        {
+            mimmo[i] = new char[map[0].Length];
+        }
         EnergizeMap(startingPoint, map, mimmo);
+
+var rowindex = 0;
+        foreach (var row in mimmo)
+        {
+            System.Console.WriteLine(string.Join(null, row) + $" row:{rowindex}");
+            rowindex++;
+        }
 
         var energizedTiles =
             mimmo
-                .Select(row => row.Count(tile => tile == true))
+                .Select(row => row.Count(tile => tile != '\0'))
                 .Sum();
 
         sw.Stop();
@@ -38,11 +49,29 @@ internal class Program
         System.Console.WriteLine(energizedTiles);
     }
 
-    private static void EnergizeMap(LazerIsHereTile currentTile, char[][] map, bool[][] energizedMap)
+    private static void EnergizeMap(LazerIsHereTile currentTile, char[][] map, char[][] energizedMap)
     {
         var coordinates = currentTile.Coordinates;
+        var currentEnergizedMapToken = energizedMap[coordinates.i][coordinates.j];
+        var currentMapToken = map[coordinates.i][coordinates.j];
 
-        energizedMap[coordinates.i][coordinates.j] = true;
+        if (currentEnergizedMapToken == '+'
+            || (currentEnergizedMapToken == '|' && (currentTile.Entering & (Direction.U | Direction.D)) != 0 && currentMapToken != '\\' && currentMapToken != '/')
+            || (currentEnergizedMapToken == '-' && (currentTile.Entering & (Direction.L | Direction.R)) != 0 && currentMapToken != '\\' && currentMapToken != '/')
+            )
+        {
+            return;
+        }
+
+        energizedMap[coordinates.i][coordinates.j] = currentTile.Entering switch
+        {
+            Direction.U or Direction.D when currentEnergizedMapToken == '-' => '+',
+            Direction.L or Direction.R when currentEnergizedMapToken == '|' => '+',
+            Direction.U or Direction.D => '|',
+            Direction.L or Direction.R => '-',
+            _ => throw new Exception($"mona, non hai considerato il caso {currentEnergizedMapToken} e {currentTile.Entering}"),
+        };
+
         var nextDirections = currentTile.GetLeavingDirections();
 
         foreach (var direction in nextDirections)
@@ -131,8 +160,8 @@ internal sealed class LazerIsHereTile
         entering switch
         {
             Direction.U or Direction.D => [Direction.L, Direction.R],
-            Direction.L => [Direction.L],
-            Direction.R => [Direction.R],
+            Direction.L => [Direction.R],
+            Direction.R => [Direction.L],
             _ => throw new ArgumentOutOfRangeException(nameof(entering), entering, null)
         };
 }
