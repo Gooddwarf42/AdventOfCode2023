@@ -16,37 +16,83 @@ internal class Program
 
         var map = ParseInput(streamReader).ToArray();
 
-        var startingPoint = new LazerIsHereTile
-        {
-            Coordinates = (0, 0),
-            Entering = Direction.L,
-            TileType = map[0][0],
-        };
+        // var startingPoint = new LazerIsHereTile
+        // {
+        //     Coordinates = (0, 0),
+        //     Entering = Direction.L,
+        //     TileType = map[0][0],
+        // };
+        //var energizedTiles = EnergizeFrom(map, startingPoint);
 
-        // I shall be lazy this time
-        var mimmo = new Direction[map.Length][];
-        for (int i = 0; i < map[0].Length; i++)
-        {
-            mimmo[i] = new Direction[map[0].Length];
-        }
-        EnergizeMap(startingPoint, map, mimmo);
+        var startingPoints = getStartingPoints(map);
 
-        var rowindex = 0;
-        foreach (var row in mimmo)
-        {
-            System.Console.WriteLine(string.Join(null, row.Select(d => d == 0 ? '.' : '#')) + $" row:{rowindex}");
-            rowindex++;
-        }
+        var maxEnergizedTiles = startingPoints
+            .Select(sp => EnergizeFrom(map, sp))
+            .Max();
 
-        var energizedTiles =
-            mimmo
-                .Select(row => row.Count(tile => tile != 0))
-                .Sum();
 
         sw.Stop();
         System.Console.WriteLine($"Time: {sw.ElapsedMilliseconds}");
 
+        System.Console.WriteLine(maxEnergizedTiles);
+    }
+
+    private static IEnumerable<LazerIsHereTile> getStartingPoints(char[][] map)
+    {
+        var height = map.Length;
+        var width = map[0].Length;
+
+        // get horizontal starting points
+        for (int i = 0; i < height; i++)
+        {
+            yield return new LazerIsHereTile
+            {
+                Coordinates = (i, 0),
+                Entering = Direction.L,
+                TileType = map[i][0],
+            };
+            yield return new LazerIsHereTile
+            {
+                Coordinates = (i, width - 1),
+                Entering = Direction.R,
+                TileType = map[i][width - 1],
+            };
+        }
+
+        // get horizontal starting points
+        for (int j = 0; j < width; j++)
+        {
+            yield return new LazerIsHereTile
+            {
+                Coordinates = (0, j),
+                Entering = Direction.U,
+                TileType = map[0][j],
+            };
+            yield return new LazerIsHereTile
+            {
+                Coordinates = (height - 1, j),
+                Entering = Direction.D,
+                TileType = map[height - 1][j],
+            };
+        }
+    }
+
+    private static int EnergizeFrom(char[][] map, LazerIsHereTile startingPoint)
+    {
+        // I shall be lazy this time
+        var energizedMapTracker = new Direction[map.Length][];
+        for (int i = 0; i < map[0].Length; i++)
+        {
+            energizedMapTracker[i] = new Direction[map[0].Length];
+        }
+        EnergizeMap(startingPoint, map, energizedMapTracker);
+
+        var energizedTiles =
+            energizedMapTracker
+                .Select(row => row.Count(tile => tile != 0))
+                .Sum();
         System.Console.WriteLine(energizedTiles);
+        return energizedTiles;
     }
 
     private static void EnergizeMap(LazerIsHereTile currentTile, char[][] map, Direction[][] energizedMap)
