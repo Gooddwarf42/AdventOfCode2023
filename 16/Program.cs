@@ -16,14 +16,6 @@ internal class Program
 
         var map = ParseInput(streamReader).ToArray();
 
-        // var startingPoint = new LazerIsHereTile
-        // {
-        //     Coordinates = (0, 0),
-        //     Entering = Direction.L,
-        //     TileType = map[0][0],
-        // };
-        //var energizedTiles = EnergizeFrom(map, startingPoint);
-
         var startingPoints = getStartingPoints(map);
 
         var maxEnergizedTiles = startingPoints
@@ -85,22 +77,22 @@ internal class Program
         {
             energizedMapTracker[i] = new Direction[map[0].Length];
         }
+
         EnergizeMap(startingPoint, map, energizedMapTracker);
 
         var energizedTiles =
             energizedMapTracker
                 .Select(row => row.Count(tile => tile != 0))
                 .Sum();
-        System.Console.WriteLine(energizedTiles);
+
         return energizedTiles;
     }
 
     private static void EnergizeMap(LazerIsHereTile currentTile, char[][] map, Direction[][] energizedMap)
     {
         var coordinates = currentTile.Coordinates;
-        var currentEnergizedMapToken = energizedMap[coordinates.i][coordinates.j];
 
-        if (currentEnergizedMapToken.HasFlag(currentTile.Entering))
+        if (energizedMap[coordinates.i][coordinates.j].HasFlag(currentTile.Entering))
         {
             return;
         }
@@ -112,17 +104,19 @@ internal class Program
         foreach (var direction in nextDirections)
         {
             var newCoordinates = direction.PerformOn(coordinates);
-            // Agricolamente lazy
+
             if (IsOutOfBounds(newCoordinates))
             {
                 continue;
             }
+
             var newTile = new LazerIsHereTile()
             {
                 Coordinates = newCoordinates,
                 Entering = direction.RotateNibbleLeft(2),
                 TileType = map[newCoordinates.i][newCoordinates.j],
             };
+
             EnergizeMap(newTile, map, energizedMap);
         }
 
