@@ -24,23 +24,23 @@ internal class Program
         };
 
         // I shall be lazy this time
-        var mimmo = new char[map.Length][];
+        var mimmo = new Direction[map.Length][];
         for (int i = 0; i < map[0].Length; i++)
         {
-            mimmo[i] = new char[map[0].Length];
+            mimmo[i] = new Direction[map[0].Length];
         }
         EnergizeMap(startingPoint, map, mimmo);
 
-var rowindex = 0;
+        var rowindex = 0;
         foreach (var row in mimmo)
         {
-            System.Console.WriteLine(string.Join(null, row) + $" row:{rowindex}");
+            System.Console.WriteLine(string.Join(null, row.Select(d => d == 0 ? '.' : '#')) + $" row:{rowindex}");
             rowindex++;
         }
 
         var energizedTiles =
             mimmo
-                .Select(row => row.Count(tile => tile != '\0'))
+                .Select(row => row.Count(tile => tile != 0))
                 .Sum();
 
         sw.Stop();
@@ -49,28 +49,17 @@ var rowindex = 0;
         System.Console.WriteLine(energizedTiles);
     }
 
-    private static void EnergizeMap(LazerIsHereTile currentTile, char[][] map, char[][] energizedMap)
+    private static void EnergizeMap(LazerIsHereTile currentTile, char[][] map, Direction[][] energizedMap)
     {
         var coordinates = currentTile.Coordinates;
         var currentEnergizedMapToken = energizedMap[coordinates.i][coordinates.j];
-        var currentMapToken = map[coordinates.i][coordinates.j];
 
-        if (currentEnergizedMapToken == '+'
-            || (currentEnergizedMapToken == '|' && (currentTile.Entering & (Direction.U | Direction.D)) != 0 && currentMapToken != '\\' && currentMapToken != '/')
-            || (currentEnergizedMapToken == '-' && (currentTile.Entering & (Direction.L | Direction.R)) != 0 && currentMapToken != '\\' && currentMapToken != '/')
-            )
+        if (currentEnergizedMapToken.HasFlag(currentTile.Entering))
         {
             return;
         }
 
-        energizedMap[coordinates.i][coordinates.j] = currentTile.Entering switch
-        {
-            Direction.U or Direction.D when currentEnergizedMapToken == '-' => '+',
-            Direction.L or Direction.R when currentEnergizedMapToken == '|' => '+',
-            Direction.U or Direction.D => '|',
-            Direction.L or Direction.R => '-',
-            _ => throw new Exception($"mona, non hai considerato il caso {currentEnergizedMapToken} e {currentTile.Entering}"),
-        };
+        energizedMap[coordinates.i][coordinates.j] |= currentTile.Entering;
 
         var nextDirections = currentTile.GetLeavingDirections();
 
