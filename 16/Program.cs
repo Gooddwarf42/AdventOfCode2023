@@ -1,8 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-using System.Collections.Specialized;
 using System.Diagnostics;
-using System.Reflection.PortableExecutable;
 
 internal class Program
 {
